@@ -1,10 +1,11 @@
 package com.randomNumber.davDavtyan;
 
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
+import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.java_websocket.WebSocket;
@@ -18,8 +19,8 @@ public class RandomNumberServer extends WebSocketServer {
 
     private final Set<String> connectedUsers = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final int port;
-
     private final Set<String> numbers = new HashSet<>();
+    private final static SecureRandom RANDOM = new SecureRandom();
 
     public RandomNumberServer(int port) {
         super(new InetSocketAddress(port));
@@ -47,19 +48,44 @@ public class RandomNumberServer extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        String randomNumber = generateNumber();
-        while (numbers.contains(randomNumber)) {
-            randomNumber = generateNumber();
-        }
+        String randomNumber = getUniqueNumber();
         numbers.add(randomNumber);
         conn.send("{\"randomNumber \":\"" + randomNumber + "\"}");
     }
 
-    private static String generateNumber() {
-        UUID uuid = UUID.randomUUID();
-        long mostSignificantBits = Math.abs(uuid.getMostSignificantBits());
-        long leastSignificantBits = Math.abs(uuid.getLeastSignificantBits());
-        return "" + mostSignificantBits + leastSignificantBits;
+    /**
+     * Generates a unique random number as a string.
+     * This method ensures that the generated number is not already present in the 'numbers' set.
+     *
+     * @return A unique random number as a string.
+     */
+    private String getUniqueNumber() {
+        // Generate an initial random number
+        String randomNumber = generateNumber();
+
+        // Check if the generated number is already in the 'numbers' set
+        while (numbers.contains(randomNumber)) {
+            // If it's not unique, generate a new random number until a unique one is found
+            randomNumber = generateNumber();
+        }
+
+        // Return the unique random number
+        return randomNumber;
+    }
+
+    /**
+     * Generates a random BigInteger as a string.
+     * This method uses a BigInteger constructor to create a random BigInteger
+     * with the specified bit length using the provided random source.
+     *
+     * @return A random BigInteger as a string.
+     */
+    private String generateNumber() {
+        // Generate a random BigInteger with the specified bit length
+        BigInteger randomBigInteger = new BigInteger(256, RANDOM);
+
+        // Convert the BigInteger to a string
+        return randomBigInteger.toString();
     }
 
     @Override
