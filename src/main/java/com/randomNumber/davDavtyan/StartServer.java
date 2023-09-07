@@ -1,6 +1,6 @@
 package com.randomNumber.davDavtyan;
 
-import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -12,19 +12,23 @@ public class StartServer {
 
     public static void main(String[] args) throws IOException {
         // Get the path to the 'property.txt' file
-        String rootPath = Thread.currentThread().getContextClassLoader().getResource("property.txt").getPath();
 
-        // Load server configuration properties from 'property.txt' file
-        Properties defaultProps = new Properties();
-        InputStream inputStream = new FileInputStream(rootPath);
+        try (InputStream inputStream = StartServer.class.getClassLoader().getResourceAsStream("property.txt")) {
+            // Load server configuration properties from 'property.txt' file
+            Properties defaultProps = new Properties();
 
-        defaultProps.load(inputStream);
+            defaultProps.load(inputStream);
 
-        // Get the port number from the properties file
-        String port = defaultProps.get("port").toString();
+            // Get the port number from the properties file
+            String port = defaultProps.get("port").toString();
 
-        // Create and start the RandomNumberServer on the specified port
-        RandomNumberServer server = new RandomNumberServer(Integer.parseInt(port));
-        server.start();
+            // Create and start the RandomNumberServer on the specified port
+            RandomNumberServer server = new RandomNumberServer(Integer.parseInt(port));
+            server.start();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
+
+
