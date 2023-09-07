@@ -16,7 +16,6 @@ import org.java_websocket.server.WebSocketServer;
  * A simple WebSocket Server implementation. sending random number.
  */
 public class RandomNumberServer extends WebSocketServer {
-
     private final Set<String> connectedUsers = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final int port;
     private final Set<String> numbers = new HashSet<>();
@@ -34,9 +33,13 @@ public class RandomNumberServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
+        // Get the IP address of the connected client
         String ip = extractIp(conn);
+
+        // Check if a connection from the same IP address already exists
         if (!connectedUsers.add(ip)) {
-            conn.close(409, "Only one connection from same ip is allowed");
+            // If a connection from the same IP exists, close the new connection with a status code 409 (Conflict)
+            conn.close(409, "Only one connection from the same IP address is allowed");
         }
     }
 
